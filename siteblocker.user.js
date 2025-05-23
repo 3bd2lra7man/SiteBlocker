@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         SiteBlocker
-// @version      1.6.1
+// @version      1.6.2
 // @description  Block specific URLs or domains with editable list (Alt+Shift+Z to edit). Includes dev logs and uses global storage.
 // @author       Abdalrahman Saad
 // @match        *://*/*
@@ -12,6 +12,7 @@
 // ==/UserScript==
 
 (function () {
+    console.log('[SiteBlocker] The Script loaded successfully ✔')
     const storageKey = 'globalSiteBlockerList';
     let lastCheckedUrl = '';
 
