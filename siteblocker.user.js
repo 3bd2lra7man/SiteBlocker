@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         SiteBlocker
-// @version      1.6.3
+// @version      1.6.4
 // @description  Block specific URLs or domains with editable list (Alt+Shift+Z to edit). Includes dev logs and uses global storage.
 // @icon         https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/res/icon.ico
 // @author       Abdalrahman Saad
@@ -13,7 +13,8 @@
 // ==/UserScript==
 
 (function () {
-    console.log('[SiteBlocker] The Script loaded successfully ✔')
+    console.log('[SiteBlocker] Script loaded ✔');
+
     const storageKey = 'globalSiteBlockerList';
     let lastCheckedUrl = '';
 
@@ -56,29 +57,51 @@
 
         console.log(`[SiteBlocker] Blocking page: ${location.href}`);
 
-        // Stop loading and override content
-        window.stop();
-        const overlay = document.createElement('div');
-        overlay.id = 'siteBlockerOverlay';
-        overlay.innerHTML = `
-            <div style="
-                position: fixed;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background: red;
-                color: black;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 2.5em;
-                font-family: sans-serif;
-                font-weight: bold;
-                text-align: center;
-                z-index: 2147483647;
-            ">
+        // Inject a permissive Trusted Types policy (to prevent TrustedHTML errors in Chrome in some sites like youtube)
+        if (window.trustedTypes && trustedTypes.createPolicy) {
+            try {
+                trustedTypes.createPolicy('default', {
+                    createHTML: input => input,
+                    createScript: input => input,
+                    createScriptURL: input => input,
+                });
+                console.log('[SiteBlocker] Trusted Types policy injected.');
+            } catch (e) {
+                console.warn('[SiteBlocker] Failed to inject Trusted Types policy:', e);
+            }
+        }
+
+        const blockedHtml = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Blocked</title>
+                <style>
+                    body {
+                        background-color: red;
+                        color: black;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                        font-family: sans-serif;
+                        font-weight: bold;
+                        font-size: 2.5em;
+                        margin: 0;
+                    }
+                </style>
+            </head>
+            <body>
                 🚫 This site '${displayName}' is blocked
-            </div>
+            </body>
+            </html>
         `;
-        document.documentElement.appendChild(overlay);
+
+        // force the document to write
+        document.open();
+        document.write(blockedHtml);
+        document.close();
     }
 
     function initBlocker() {
@@ -89,7 +112,7 @@
     // Initial check
     initBlocker();
 
-    // SPA / hash-based navigation handling
+    // SPA navigation handling
     const observer = new MutationObserver(() => initBlocker());
     observer.observe(document, { subtree: true, childList: true });
 
@@ -101,6 +124,7 @@
         if (e.altKey && e.shiftKey && e.key.toLowerCase() === 'z') {
             console.log('[SiteBlocker] Hotkey triggered: Alt+Shift+Z');
             e.preventDefault();
+
             const currentList = loadBlockList();
             const current = currentList.join(', ');
             const input = prompt("Edit blocked URLs or domains (comma separated):", current);
@@ -121,5 +145,5 @@
         }
     });
 
-    console.log('[SiteBlocker] Script loaded and running. Press Alt+Shift+Z to edit the block list.');
+    console.log('[SiteBlocker] Ready. Press Alt+Shift+Z to edit the block list.');
 })();
