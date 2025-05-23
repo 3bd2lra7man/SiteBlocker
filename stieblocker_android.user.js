@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         SiteBlocker
-// @version      1.6.5
+// @version      1.6.6
 // @description  Block specific URLs or domains with editable list (Alt+Shift+Z to edit). Includes dev logs and uses global storage.
 // @icon         https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/res/icon.ico
 // @author       Abdalrahman Saad
@@ -74,60 +74,34 @@
         }
 
         const blockedHtml = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Site Blocked</title>
-                <style>
-                    * {
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }
-                    body {
-                        background-color: #ff4444;
-                        color: white;
-                        font-family: 'Roboto', sans-serif;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                        min-height: 100vh;
-                        padding: 20px;
-                        text-align: center;
-                    }
-                    .block-icon {
-                        font-size: 3rem;
-                        margin-bottom: 20px;
-                    }
-                    .block-message {
-                        font-size: 1.5rem;
-                        font-weight: bold;
-                        margin-bottom: 10px;
-                        word-break: break-word;
-                    }
-                    .block-url {
-                        font-size: 1rem;
-                        color: rgba(255,255,255,0.8);
-                        margin-top: 10px;
-                        word-break: break-all;
-                    }
-                    @media (max-width: 480px) {
-                        .block-message {
-                            font-size: 1.2rem;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="block-icon">🚫</div>
-                <div class="block-message">This site has been blocked</div>
-                <div class="block-message">'${displayName}'</div>
-                <div class="block-url">${location.href}</div>
-            </body>
-            </html>
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Blocked</title>
+    <style>
+        body {
+            background-color: red;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 2.5em;
+            margin: 0;
+            padding: 10px;
+            text-align: center;
+            -webkit-text-size-adjust: 100%;
+        }
+    </style>
+</head>
+<body>
+    🚫 This site '${displayName}' is blocked
+</body>
+</html>
         `;
 
         document.open();
