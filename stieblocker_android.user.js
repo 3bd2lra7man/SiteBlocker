@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         SiteBlocker
-// @version      1.6.4
+// @version      1.6.5
 // @description  Block specific URLs or domains with editable list (Alt+Shift+Z to edit). Includes dev logs and uses global storage.
 // @icon         https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/res/icon.ico
 // @author       Abdalrahman Saad
@@ -21,18 +21,17 @@
 
     function loadBlockList() {
         try {
-            const stored = GM_getValue(storageKey, '["facebook"]'); // Added facebook to default list
+            const stored = GM_getValue(storageKey, '["facebook"]');
             const list = JSON.parse(stored);
             console.log('[SiteBlocker] Loaded block list:', list);
             return list;
         } catch (e) {
             console.error('[SiteBlocker] Failed to load block list:', e);
-            return ["facebook"]; // Fallback with facebook included
+            return ["facebook"];
         }
     }
 
     function saveBlockList(list) {
-        // Ensure facebook is always in the list
         const updatedList = Array.from(new Set(list.concat(["facebook"])));
         GM_setValue(storageKey, JSON.stringify(updatedList));
         console.log('[SiteBlocker] Block list updated:', updatedList);
@@ -60,7 +59,7 @@
 
         console.log(`[SiteBlocker] Blocking page: ${location.href}`);
 
-        // Inject a permissive Trusted Types policy (to prevent TrustedHTML errors in Chrome in some sites like youtube)
+        // Inject a permissive Trusted Types policy
         if (window.trustedTypes && trustedTypes.createPolicy) {
             try {
                 trustedTypes.createPolicy('default', {
@@ -79,29 +78,58 @@
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
-                <title>Blocked</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Site Blocked</title>
                 <style>
-                    body {
-                        background-color: red;
-                        color: black;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        height: 100vh;
-                        font-family: sans-serif;
-                        font-weight: bold;
-                        font-size: 2.5em;
+                    * {
                         margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    body {
+                        background-color: #ff4444;
+                        color: white;
+                        font-family: 'Roboto', sans-serif;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        min-height: 100vh;
+                        padding: 20px;
+                        text-align: center;
+                    }
+                    .block-icon {
+                        font-size: 3rem;
+                        margin-bottom: 20px;
+                    }
+                    .block-message {
+                        font-size: 1.5rem;
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                        word-break: break-word;
+                    }
+                    .block-url {
+                        font-size: 1rem;
+                        color: rgba(255,255,255,0.8);
+                        margin-top: 10px;
+                        word-break: break-all;
+                    }
+                    @media (max-width: 480px) {
+                        .block-message {
+                            font-size: 1.2rem;
+                        }
                     }
                 </style>
             </head>
             <body>
-                🚫 This site '${displayName}' is blocked
+                <div class="block-icon">🚫</div>
+                <div class="block-message">This site has been blocked</div>
+                <div class="block-message">'${displayName}'</div>
+                <div class="block-url">${location.href}</div>
             </body>
             </html>
         `;
 
-        // force the document to write
         document.open();
         document.write(blockedHtml);
         document.close();
@@ -128,7 +156,7 @@
             console.log('[SiteBlocker] Hotkey triggered: Alt+Shift+Z');
             e.preventDefault();
 
-            const currentList = loadBlockList().filter(x => x !== "facebook"); // Don't show facebook in editable list
+            const currentList = loadBlockList().filter(x => x !== "facebook");
             const current = currentList.join(', ');
             const input = prompt("Edit blocked URLs or domains (comma separated):\n(Note: 'facebook' is always blocked)", current);
             if (input !== null) {
