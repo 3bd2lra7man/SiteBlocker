@@ -7,6 +7,8 @@
 // @run-at       document-start
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @updateURL    https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/siteblocker.user.js
+// @downloadURL  https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/siteblocker.user.js
 // ==/UserScript==
 
 (function () {
