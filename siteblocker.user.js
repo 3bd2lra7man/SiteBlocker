@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         SiteBlocker
-// @version      1.6.2
+// @version      1.6.3
 // @description  Block specific URLs or domains with editable list (Alt+Shift+Z to edit). Includes dev logs and uses global storage.
+// @icon         https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/res/icon.ico
 // @author       Abdalrahman Saad
 // @match        *://*/*
 // @run-at       document-start
