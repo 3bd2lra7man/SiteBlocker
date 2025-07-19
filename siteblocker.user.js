@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         SiteBlocker
-// @version      1.6.5
+// @version      1.6.6
 // @description  Block specific URLs or domains with editable list via menu (not hotkey). Includes dev logs and uses global storage.
 // @icon         https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/res/icon.ico
 // @author       Abdalrahman Saad
@@ -52,57 +52,92 @@
     }
 
     function blockPage(matchedEntry) {
-        const displayName = matchedEntry.includes('.')
-            ? matchedEntry
-            : matchedEntry.charAt(0).toUpperCase() + matchedEntry.slice(1);
+    const displayName = matchedEntry.includes('.')
+        ? matchedEntry
+        : matchedEntry.charAt(0).toUpperCase() + matchedEntry.slice(1);
 
-        console.log(`[SiteBlocker] Blocking page: ${location.href}`);
+    console.log(`[SiteBlocker] Blocking page: ${location.href}`);
 
-        // Inject a permissive Trusted Types policy (for Chrome issues)
-        if (window.trustedTypes && trustedTypes.createPolicy) {
-            try {
-                trustedTypes.createPolicy('default', {
-                    createHTML: input => input,
-                    createScript: input => input,
-                    createScriptURL: input => input,
-                });
-                console.log('[SiteBlocker] Trusted Types policy injected.');
-            } catch (e) {
-                console.warn('[SiteBlocker] Failed to inject Trusted Types policy:', e);
+    // 1. Block all common network activity before displaying blocked page
+    Object.defineProperties(window, {
+        fetch: {
+            value: () => Promise.reject(new Error("Blocked by SiteBlocker")),
+            writable: false
+        },
+        XMLHttpRequest: {
+            value: function () {
+                throw new Error("Blocked by SiteBlocker");
+            },
+            writable: false
+        },
+        WebSocket: {
+            value: function () {
+                throw new Error("Blocked by SiteBlocker");
+            },
+            writable: false
+        }
+    });
+
+    // 2. Block HTML element loading
+    const blockElements = ['img', 'script', 'iframe', 'audio', 'video', 'link', 'source'];
+    const observer = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+                if (node.nodeType === 1 && blockElements.includes(node.tagName.toLowerCase())) {
+                    node.remove();
+                    console.log(`[SiteBlocker] Blocked tag: <${node.tagName.toLowerCase()}>`);
+                }
             }
         }
+    });
+    observer.observe(document.documentElement || document.body, {
+        childList: true,
+        subtree: true
+    });
 
-        const blockedHtml = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Blocked</title>
-                <style>
-                    body {
-                        background-color: red;
-                        color: black;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        height: 100vh;
-                        font-family: sans-serif;
-                        font-weight: bold;
-                        font-size: 2.5em;
-                        margin: 0;
-                    }
-                </style>
-            </head>
-            <body>
-                🚫 This site '${displayName}' is blocked
-            </body>
-            </html>
-        `;
-
-        document.open();
-        document.write(blockedHtml);
-        document.close();
+    // 3. Trusted types (Chrome fix)
+    if (window.trustedTypes && trustedTypes.createPolicy) {
+        try {
+            trustedTypes.createPolicy('default', {
+                createHTML: input => input,
+                createScript: input => input,
+                createScriptURL: input => input,
+            });
+        } catch (e) { }
     }
+
+    // 4. Replace entire page
+    const blockedHtml = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Blocked</title>
+            <style>
+                body {
+                    background-color: red;
+                    color: black;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    font-family: sans-serif;
+                    font-weight: bold;
+                    font-size: 2.5em;
+                    margin: 0;
+                }
+            </style>
+        </head>
+        <body>
+            🚫 This site '${displayName}' is blocked
+        </body>
+        </html>
+    `;
+    document.open();
+    document.write(blockedHtml);
+    document.close();
+}
+
 
     function initBlocker() {
         const match = shouldBlockCurrentUrl();
