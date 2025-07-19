@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         SiteBlocker
-// @version      1.6.4
-// @description  Block specific URLs or domains with editable list (Alt+Shift+Z to edit). Includes dev logs and uses global storage.
+// @version      1.6.5
+// @description  Block specific URLs or domains with editable list via menu (not hotkey). Includes dev logs and uses global storage.
 // @icon         https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/res/icon.ico
 // @author       Abdalrahman Saad
 // @match        *://*/*
 // @run-at       document-start
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_registerMenuCommand
 // @updateURL    https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/siteblocker.user.js
 // @downloadURL  https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/siteblocker.user.js
 // ==/UserScript==
@@ -57,7 +58,7 @@
 
         console.log(`[SiteBlocker] Blocking page: ${location.href}`);
 
-        // Inject a permissive Trusted Types policy (to prevent TrustedHTML errors in Chrome in some sites like youtube)
+        // Inject a permissive Trusted Types policy (for Chrome issues)
         if (window.trustedTypes && trustedTypes.createPolicy) {
             try {
                 trustedTypes.createPolicy('default', {
@@ -98,7 +99,6 @@
             </html>
         `;
 
-        // force the document to write
         document.open();
         document.write(blockedHtml);
         document.close();
@@ -115,35 +115,31 @@
     // SPA navigation handling
     const observer = new MutationObserver(() => initBlocker());
     observer.observe(document, { subtree: true, childList: true });
-
     window.addEventListener('hashchange', initBlocker);
     window.addEventListener('popstate', initBlocker);
 
-    // Hotkey: Alt + Shift + Z
-    window.addEventListener('keydown', function (e) {
-        if (e.altKey && e.shiftKey && e.key.toLowerCase() === 'z') {
-            console.log('[SiteBlocker] Hotkey triggered: Alt+Shift+Z');
-            e.preventDefault();
+    // ⬇️ Add menu command instead of hotkey
+    GM_registerMenuCommand("✏️ Edit Block List", () => {
+        console.log('[SiteBlocker] Menu triggered: Edit Block List');
 
-            const currentList = loadBlockList();
-            const current = currentList.join(', ');
-            const input = prompt("Edit blocked URLs or domains (comma separated):", current);
-            if (input !== null) {
-                const updated = input
-                    .split(',')
-                    .map(s => s.trim().toLowerCase())
-                    .filter(Boolean);
+        const currentList = loadBlockList();
+        const current = currentList.join(', ');
+        const input = prompt("Edit blocked URLs or domains (comma separated):", current);
+        if (input !== null) {
+            const updated = input
+                .split(',')
+                .map(s => s.trim().toLowerCase())
+                .filter(Boolean);
 
-                if (JSON.stringify(currentList) !== JSON.stringify(updated)) {
-                    saveBlockList(updated);
-                    alert('Block list updated. Reloading page...');
-                    window.location.reload();
-                } else {
-                    console.log('[SiteBlocker] No changes to block list.');
-                }
+            if (JSON.stringify(currentList) !== JSON.stringify(updated)) {
+                saveBlockList(updated);
+                alert('Block list updated. Reloading page...');
+                window.location.reload();
+            } else {
+                console.log('[SiteBlocker] No changes to block list.');
             }
         }
     });
 
-    console.log('[SiteBlocker] Ready. Press Alt+Shift+Z to edit the block list.');
+    console.log('[SiteBlocker] Ready. Use menu command to edit the block list.');
 })();
