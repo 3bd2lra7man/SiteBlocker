@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         SiteBlocker
-// @version      1.6.6
+// @version      1.6.7
 // @description  Block specific URLs or domains with editable list via menu (not hotkey). Includes dev logs and uses global storage.
 // @icon         https://github.com/3bd2lra7man/SiteBlocker/raw/refs/heads/main/res/icon.ico
 // @author       Abdalrahman Saad
@@ -177,4 +177,48 @@
     });
 
     console.log('[SiteBlocker] Ready. Use menu command to edit the block list.');
+    
+    GM_registerMenuCommand("🔁 Convert to Regular Video URL", () => {
+    const url = new URL(location.href);
+    const host = url.hostname.replace(/^www\./, '');
+    let newUrl = '';
+
+    // YouTube Shorts -> Watch
+    if ((host === 'youtube.com' || host === 'youtu.be') && url.pathname.startsWith('/shorts/')) {
+        const id = url.pathname.split('/')[2];
+        newUrl = `https://www.youtube.com/watch?v=${id}`;
+    }
+
+    // Facebook Reels or Watch
+    else if (host === 'facebook.com' || host === 'fb.watch') {
+        if (url.pathname.startsWith('/reel/')) {
+            const id = url.pathname.split('/')[2];
+            newUrl = `https://www.facebook.com/watch/?v=${id}`;
+        } else if (url.pathname.startsWith('/watch/')) {
+            const vParam = url.searchParams.get('v');
+            if (vParam) {
+                newUrl = `https://www.facebook.com/watch/?v=${vParam}`;
+            }
+        } else if (host === 'fb.watch') {
+            // fb.watch/abc123/ → try to extract ID and redirect
+            const id = url.pathname.split('/')[1];
+            if (id) {
+                newUrl = `https://www.facebook.com/watch/?v=${id}`;
+            }
+        }
+    }
+
+    // Instagram Reels
+    else if (host === 'instagram.com' && url.pathname.startsWith('/reel/')) {
+        const id = url.pathname.split('/')[2];
+        newUrl = `https://www.instagram.com/p/${id}/`;
+    }
+
+    if (newUrl && newUrl !== location.href) {
+        console.log('[SiteBlocker] Redirecting to regular video URL:', newUrl);
+        location.href = newUrl;
+    } else {
+        alert("This URL is either already in standard format or not supported.");
+    }
+});
 })();
