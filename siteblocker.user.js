@@ -44,7 +44,7 @@
         const sitesToBlock = loadBlockList();
         for (const entry of sitesToBlock) {
             if (currentUrl.includes(entry)) {
-                console.log([SiteBlocker] Match found for: ${entry});
+                console.log(`[SiteBlocker] Match found for: ${entry}`);
                 return entry;
             }
         }
@@ -56,7 +56,7 @@
         ? matchedEntry
         : matchedEntry.charAt(0).toUpperCase() + matchedEntry.slice(1);
 
-    console.log([SiteBlocker] Blocking page: ${location.href});
+    console.log(`[SiteBlocker] Blocking page: ${location.href}`);
 
     // 1. Block all common network activity before displaying blocked page
     Object.defineProperties(window, {
@@ -85,7 +85,7 @@
             for (const node of mutation.addedNodes) {
                 if (node.nodeType === 1 && blockElements.includes(node.tagName.toLowerCase())) {
                     node.remove();
-                    console.log([SiteBlocker] Blocked tag: <${node.tagName.toLowerCase()}>);
+                    console.log(`[SiteBlocker] Blocked tag: <${node.tagName.toLowerCase()}>`);
                 }
             }
         }
@@ -108,7 +108,7 @@
 
     // 4. Replace entire page
     const blockedHtml = 
-        <!DOCTYPE html>
+        `<!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
@@ -135,7 +135,7 @@
     ;
     document.open();
     document.write(blockedHtml);
-    document.close();
+    document.close();`
 }
 
 
@@ -186,24 +186,24 @@
     // YouTube Shorts -> Watch
     if ((host === 'youtube.com' || host === 'youtu.be') && url.pathname.startsWith('/shorts/')) {
         const id = url.pathname.split('/')[2];
-        newUrl = https://www.youtube.com/watch?v=${id};
+        newUrl = `https://www.youtube.com/watch?v=${id}`;
     }
 
     // Facebook Reels or Watch
     else if (host === 'facebook.com' || host === 'fb.watch') {
         if (url.pathname.startsWith('/reel/')) {
             const id = url.pathname.split('/')[2];
-            newUrl = https://www.facebook.com/watch/?v=${id};
+            newUrl = `https://www.facebook.com/watch/?v=${id}`;
         } else if (url.pathname.startsWith('/watch/')) {
             const vParam = url.searchParams.get('v');
             if (vParam) {
-                newUrl = https://www.facebook.com/watch/?v=${vParam};
+                newUrl = `https://www.facebook.com/watch/?v=${vParam}`;
             }
         } else if (host === 'fb.watch') {
             // fb.watch/abc123/ → try to extract ID and redirect
             const id = url.pathname.split('/')[1];
             if (id) {
-                newUrl = https://www.facebook.com/watch/?v=${id};
+                newUrl = `https://www.facebook.com/watch/?v=${id}`;
             }
         }
     }
@@ -211,7 +211,7 @@
     // Instagram Reels
     else if (host === 'instagram.com' && url.pathname.startsWith('/reel/')) {
         const id = url.pathname.split('/')[2];
-        newUrl = https://www.instagram.com/p/${id}/;
+        newUrl = `https://www.instagram.com/p/${id}/`;
     }
 
     if (newUrl && newUrl !== location.href) {
