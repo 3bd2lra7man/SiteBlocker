@@ -107,8 +107,8 @@
     }
 
     // 4. Replace entire page
-    const blockedHtml = 
-        `<!DOCTYPE html>
+    const blockedHtml = `
+        <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
@@ -132,10 +132,10 @@
             🚫 This site '${displayName}' is blocked
         </body>
         </html>
-    ;
+    `;
     document.open();
     document.write(blockedHtml);
-    document.close();`
+    document.close();
 }
 
 
